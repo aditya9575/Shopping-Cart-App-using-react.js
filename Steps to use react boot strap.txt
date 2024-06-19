@@ -1,0 +1,32 @@
+run the install command of react boot strap -> npm install react-bootstrap bootstrap
+then just copy paste this css command in the main.jsx file -> import 'bootstrap/dist/css/bootstrap.min.css';
+
+Now you can start using the css
+
+-----------------------------------------
+1) Navbar -> 
+import { Navbar, Container, FormControl } from "react-bootstrap";
+
+then wrap with container -> inside it 
+
+* use Navbar.brand tag for heading in the navbar -> 
+        {/* navbar brand tag is the heading / logo part of the navbar */}
+        <Navbar.Brand>
+          <a href="/">Shopping Cart</a>
+        </Navbar.Brand>
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+To use icons we make use of this package 
+
+npm install react-icons 
+
+then import whatever you wana use and then after use it in your project 
+example -> import { FaShoppingCart } from "react-icons/fa";
+
+      <FaShoppingCart color="white" fontSize="25px"/>
+
+

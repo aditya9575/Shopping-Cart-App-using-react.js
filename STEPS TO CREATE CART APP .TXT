@@ -1,0 +1,345 @@
+1-> npm i phosphor-react react-router-dom
+
+2-> create components -> navbar 
+
+3-> Create pages which will be routed along the app as needed -> Shop.jsx & Cart.jsx 
+
+(wrap the app.jsx with BrowserRouter component in the main.jsx file the -----)
+4-> Now in the app.jsx import these pages and set up the routing process -> 
+import { Route, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Shop from "./pages/shop/Shop";
+import Cart from "./pages/cart/Cart";
+
+now set the routes to be navigated upon -> 
+const App = () => {
+  return (
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Shop/>}/>
+        <Route path="/cart" element={<Cart/>}/>
+      </Routes>
+    </>
+  );
+};
+
+4-> create a products.js file and create an export object named PRODUCTS in it which will simply have the info about all the products 
+and a link to their image 
+ex-> import product1 from "./assets/1.png";
+export const PRODUCTS = [
+  {
+    id: 1,
+    productName: "IPhone",
+    price: 999.0,
+    productImage: product1,
+  },
+]
+
+5-> now in the shop component we just import this PRODUCTS object and map over it one by one and then after return another component 
+-Product and pass on this data to it 
+
+and this Product component will simply receive all the data of the product via props and then destructure it to show the specific data 
+in its card format hence we will be displaying all the products in a card format 
+
+ex-> <div className="products">
+        {PRODUCTS.map((product) => (
+          <Product data={product} />
+        ))}
+      </div>
+
+
+6-> now we create the Product component--->
+import React from 'react'
+
+
+// we receive the data here for each product and destructure accordingly 
+const Product = (props) => {
+
+    const {id , productName , price , productImage} = props.data;
+
+  return (
+    <div className='product'>
+        <img src={productImage}/>
+        <div className='description'>
+           <p>
+           <b>{productName}</b>
+           </p>
+           <p>${price}</p>
+        </div>
+        <button className='addToCartBttn'>Add To Cart</button>
+    </div>
+  )
+}
+
+export default Product
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+
+NOW WE HAVE THE BASIC SETUP READY AND WE NEED NOW TO MANAGE STATES TO HAVE OUR DATA BEING DISPLAYED ONTO ANOTHER COMPONENT AS ADDTOCART
+FUNCTIONALITY WORKS 
+
+for this WE WILL BE USING THE CONTEXT API 
+
+1) START BY CREATING A FOLDER NAMED CONTEXT -> inside it -> ShopContext.jsx and do rafce 
+
+2) Inside it we have our ShopContextProvider component which will be having all the initial states that we need to access throughout 
+   the app
+
+3) Then we will create a new context named [ShopContext] which will be used to pass on these states and functions to the place 
+   whereever they are needed    -->  SO WE HERE WANT TO HAVE A STATE THAT WE CAN ACCESS IN THE SHOP BUT WE SHOULD BE ABLE TO ACCESS 
+   AND CHANGE IT FROM THE CART AS WELL 
+
+4) NOW AS WE have our states that needs to be accessed throughout the app in our ShopContextProvider we inside it will use -> 
+our contextname.provider to wrap the contents inside its return statement 
+NOTE -> And we inside this return statement we will pass on props.children which will ultimately mean that everything inside this
+context should be accessible to the place where this context is being used 
+i.e---> 
+ return (
+    <ShopContext.Provider>
+         {props.children}
+    </ShopContext.Provider>
+  )
+
+5) Now we start creating our states that are required which is the state that has object with 8 propertiest of cart items 
+
+so outside this function we will create another function that will have the initial state set as 0 for every item but if we want to add
+that very item to the cart this initial state of that item will be incremented by 1 
+
+NOTE ---> And as we need to handle the scenario of having a new product being added so we need to have this seprate function which will 
+get the array and create an empty object to represent the initial state of our cart items 
+i.e-> 
+const getDefaultCart = () => {
+    let cart = {}
+    for(let i=1; i<PRODUCTS.length + 1; i++){
+        // for each item we will set the initial quantity to 0
+        cart[i] = 0;
+    }
+    return cart;
+}
+
+6) Now we will pass on this function as the value of the initial state of cart items inside of the shopContextProvider component
+i.e->
+const [cartItems,setCartItems] = useState(getDefaultCart());
+
+7) Now as we have our state we need to add and remove an item from our cart by using this state 
+
+so we create addToCart function inside our main function -> 
+-> this function will take in the id of the item we want to add in our cart and it will set the  cartItems object that we have to the 
+same object as it was before so we grab the prev value of the state and se it to same as before but we here want to make a specific 
+change we want to grab the specific item with this specific item id and change it to be whatever it was before + 1 
+
+
+i.e-> 
+const addTOCart = (itemId ) => {
+      setCartItems((prev)=>({...prev , [itemId]:prev[itemId] + 1}))
+}
+
+8) we will do the same for removeFromCart function as well just change it to -1
+i.e-> 
+const addToCart = (itemId ) => {
+      setCartItems((prev)=>({...prev , [itemId]:prev[itemId] - 1}))
+}
+
+9) Now we start the process of passing these functions to our provider so that we have access to it outside of this component 
+i.e-> so we firstly create an object that contains all the states and functions that are needed to be accessed 
+i.e->const contextValue = { cartItems, addToCart , removeFromCart}
+
+10) Now we pass on this object as value to out context provider 
+i.e-> 
+    <ShopContext.Provider value={contextValue}>
+
+
+11) Now add an export statement for this context so that we can import it elsewhere
+ Now we can access the functions as needed outside this shopcontext component
+
+12) Now in our app.jsx component we need to wrap everything with this ShopContextProvider
+
+13) So firstly we need to access this addTOCart function in our product component to be used in addToCartBttn
+So we start by importing this useContext hook in the Product.jsx to access the context values being passed here and 
+destructure addTOCart function from that context to have access to it 
+
+const {addToCart} = useContext(ShopContext)
+
+14) Now we add an onClick to trigger this addToCart function that we destructured from the shopcontext i.e-> 
+        <button className='addToCartBttn' onClick={()=>{addToCart}}>Add To Cart</button>
+
+15) and as we know this addToCart will need an id and as our button will exist inside of each product so we pass this id that we 
+destructured from the props above to the ->         
+        <button className='addToCartBttn' onClick={() => addToCart(id)}>Add To Cart</button>
+
+16) now if we add a log statement in our shop context we will be able to see the values increasing by one on every add to cart 
+button press.
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+Now to display the number of items in the cart -> 
+
+we are going to add some logic into our add to cart button in our product.jsx that if the cartItemAmount is greater than 0 then we 
+will display the actual amount 
+i.e-> 
+<button className="addToCartBttn" onClick={() => addToCart(id)}>
+        Add To Cart {cartItemAmount > 0 && <>({cartItemAmount})</>}
+</button>
+
+
+now if we tap on add to cart button below the product it will be displaying the quantity of product added all in the cart button itself 
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+                                                        Now we need to make our cart 
+
+in our cart.jsx -> 
+
+Here we are going to grab our products list and then map through all of them with conditional rendering checks 
+
+1) we import our shopcontext and destructure our cartItems from it 
+const { cartItems } = useContext(ShopContext);
+
+2) Now we create our cart structure -> a div with cart heading and then a div for cartItems 
+
+3) inside the div for cartitems we grab the PRODUCTS object and map over it and use a check statement that if cartItems[product.id] is 
+not equal to 0 it means that the product is in our cart currently and the process is we go through the PRODUCTS object one by one and 
+compare the current id of that very particular traversed index and compare it against zero and if not found equal to zero 
+
+4) we return a component CartItem and pass on a data prop to it with product data in it -> 
+<div className='cartItems'>
+      {/* here we are grabbing the PRODUCTS OBJECT AND THEN WE ARE MAPPING THROUGH IT WITH A CONDITIONAL RENDERING OF -> if the
+       cartItems */}
+         {PRODUCTS.map((product)=>{
+          
+          {/* this means that that very product is in our cart as the id is not 0 */}     
+               if(cartItems[product.id] !== 0){
+                {/* in such a case we return this new component CartItem which will ...*/}
+                return <CartItem data={product}/>
+               }
+         })}
+      </div>
+
+5) Now we create our CartItem component in cart folder 
+
+here we destructure all the details of the product from the props that we receive from our Cart component -> 
+  const { id, productName, price, productImage } = props.data;
+
+then we structure our product to -> 
+    // here we show our cartItems that are being added and also that how will all the items in the cart will be displayed 
+    <div className='cartItem'>
+       
+       <img src={productImage}/>
+       <div className='description'>
+        <p> <b> {productName} </b> </p>
+        <p>${price}</p>
+       </div>
+    </div>
+
+[ now till here we should be able to see the items we add in our cart with image , name  and description ]
+
+6) Now we will be adding + & - buttons to our cart and an input so that we can mannually change the quantity of the product added 
+
+[NOTE THIS INPUT HAS TO HAVE THE INITIAL VALUES OF THE PRODUCTS BEING ADDED AND THEN WE CAN ALTER IT ACCORDINGLY]
+SO FOR THIS -------> 
+
+we get our actual cartItem  -> const {cartItems} = useContext(ShopContext)
+
+then we pass on this cartItems to our input as a value and then after we also pass in the id we destructured from the
+ props to our cartItems this will now give the correct display of initial values of the products being added 
+     <input type="text"  value={cartItems[id]} />
+
+
+
+---> Now we handle adding and removing button -> we also import addToCart and removeFromCart functions from our shop context and 
+the assign them to their respective buttons and also pass in the id to it -> 
+    <button onClick={()=> removeFromCart(id)}>-</button>
+    <button onClick={()=> addToCart(id)}>+</button>
+
+this will now enable to add or remove type the product 
+
+---> Now for us to be able to change the initial values of of the product inside the input field we will need to add an 
+onChange event listner to it and trigger the function updateCartItems from it 
+
+---------------------------------->
+But as we don't have this function in our shopContext yet so we will add it there 
+i.e-> 
+const updateCartItems = (newAmount , itemId ) => {
+  setCartItems((prev)=>({...prev , [itemId]:newAmount}))
+}
+
+and then we will also include it in our context value to be accessible throughout the app -> 
+const contextValue = { cartItems, addToCart , removeFromCart , updateCartItems}
+
+Now we add onChange to it and trigger the updateCartItems function with it and also pass in the change value and the product id to it
+          <input type="text" value={cartItems[id]}  onChange={(e)=>{updateCartItems(Number(e.target.value),id)}}/>
+
+
+[Now we will be able to update the item amount mannually from the cart as well ]          
+
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+now we need to have checkout buttons and total of the cart section at the end of the cart so in our cart.jsx -> 
+1)Now we structure our end part of the cart
+<div className='checkout'>
+ <p>Subtotal: $</p>
+ <button>Continue Shopping</button>
+ <button>Checkout</button>
+</div>
+
+
+2)Now to access the total amount of the cart we need to go to shopcontext and there we need to create a function for it
+->
+const getCartTotalAmount = () =>{
+  let totalAmount = 0;
+
+  // now we are going to loop through every item in the cartItems object and see if their values are greater than 0 and if it is so 
+  // it means that item is in the cart and then we grab their value which is their ->"amount of them in the cart" and multiply it by
+  // price of the product and then add it to the total amount 
+
+  // item here is the id representing the product and  cartItems[item] is the amount of that specific product in the cart
+  for(const item in cartItems){
+    if(cartItems[item] > 0){
+      let itemInfo = PRODUCTS.find((product) => product.id === Number(item));
+      totalAmount += cartItems[item] * itemInfo.price
+    }
+  }
+   return totalAmount;
+
+}
+
+3) now we add this to the context -> 
+const contextValue = { cartItems, addToCart , removeFromCart , updateCartItems , getCartTotalAmount}
+
+4) Now in cart.jsx we destructure this from the context 
+-> const { cartItems , getCartTotalAmount} = useContext(ShopContext);
+
+5) Then we assign this getCartTotalAmount() function to  a constant and then use it as the value of our total amount section 
+const totalAmount = getCartTotalAmount();
+
+ <p>Subtotal: ${totalAmount}</p>
+
+
+[Now we will be able to see the total amount of the products we add in our app ]
+
+6) we also add one conditional rendering to only display this checkout section in cart if we have added items to it 
+
+
+---------------------------------->
+Now we just have to add functionality in cart.jsx so that on click of continue shopping we go back to our home page 
+
+->import {useNavigate} from "react-router-dom";
+
+-> const navigate = useNavigate();
+
+-> <button onClick={()=>navigate("/")}>Continue Shopping</button>
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------

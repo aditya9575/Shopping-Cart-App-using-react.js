@@ -1,0 +1,19 @@
+/* styles.css */
+
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .fullscreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
